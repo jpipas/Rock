@@ -488,6 +488,7 @@ namespace Rock.Model
                 {
                     PersonService.UpdatePersonAgeClassification( this.PersonId, dbContext as RockContext );
                     PersonService.UpdatePrimaryFamily( this.PersonId, dbContext as RockContext );
+                    PersonService.UpdateGivingLeaderId( this.PersonId, dbContext as RockContext );
                 }
             }
         }
@@ -548,7 +549,7 @@ namespace Rock.Model
             var groupService = new GroupService( rockContext );
             var group = this.Group ?? groupService.Queryable().AsNoTracking().Where( g => g.Id == this.GroupId ).FirstOrDefault();
 
-            if ( !groupService.AllowsDuplicateMembers( group ) )
+            if ( GroupService.AllowsDuplicateMembers() )
             {
                 var groupMember = new GroupMemberService( rockContext ).GetByGroupIdAndPersonIdAndGroupRoleId( this.GroupId, this.PersonId, this.GroupRoleId );
                 if ( groupMember != null && groupMember.Id != this.Id )
@@ -578,8 +579,6 @@ namespace Rock.Model
         private bool ValidateGroupMembership( RockContext rockContext, out string errorMessage )
         {
             errorMessage = string.Empty;
-
-            var groupService = new GroupService( rockContext );
             var group = this.Group ?? new GroupService( rockContext ).Queryable().AsNoTracking().Where( g => g.Id == this.GroupId ).FirstOrDefault();
 
             var groupType = GroupTypeCache.Get( group.GroupTypeId );
@@ -599,7 +598,7 @@ namespace Rock.Model
             }
 
             // Verify duplicate role/person
-            if ( !groupService.AllowsDuplicateMembers( group ) )
+            if ( !GroupService.AllowsDuplicateMembers() )
             {
                 if ( !ValidateGroupMemberDuplicateMember( rockContext, groupType, out errorMessage ) )
                 {
